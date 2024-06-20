@@ -12,8 +12,17 @@
         <link href="{{ asset('css/style.css') }}" rel="stylesheet" />
     </head>
     <body class="bg-dark">
+        <div class="loading fixed-top bg-white" id="LoadingAnimation">
+            <div class="spinner-border text-dark" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <h2 class="ml-4 my-auto text-dark font-weight-normal">
+                Please wait
+            </h2>
+        </div>
+
         <div class="container border border-light rounded shadow p-5 bg-white">
-            <h1 class="text-center">Jasa Pengiriman</h1>
+            <h1 class="text-center font-weight-bold">Jasa Pengiriman</h1>
             <form
                 id="shippingForm"
                 class="mt-4"
@@ -98,49 +107,72 @@
                     },
                 });
 
-                // Menampilkan kota destinasi dan asal
-                $.get("/cities", function (data) {
-                    var cities = data.rajaongkir.results;
-                    if (Array.isArray(cities)) {
-                        cities.forEach(function (city) {
+                $.ajax({
+                    url: "/cities",
+                    method: "GET",
+                    beforeSend: function () {
+                        // Menampilkan animasi loading saat request dikirim
+                        $("#LoadingAnimation").addClass(
+                            "d-flex justify-content-center align-items-center"
+                        );
+                        $("#LoadingAnimation").removeClass("d-none");
+                    },
+                    success: function (data) {
+                        var cities = data.rajaongkir.results;
+                        if (Array.isArray(cities)) {
+                            cities.forEach(function (city) {
+                                $("#origin").append(
+                                    '<option value="' +
+                                        city.city_id +
+                                        '">' +
+                                        city.city_name +
+                                        "</option>"
+                                );
+                                $("#destination").append(
+                                    '<option value="' +
+                                        city.city_id +
+                                        '">' +
+                                        city.city_name +
+                                        "</option>"
+                                );
+                            });
+                        } else {
                             $("#origin").append(
                                 '<option value="' +
-                                    city.city_id +
+                                    cities.city_id +
                                     '">' +
-                                    city.city_name +
+                                    cities.city_name +
                                     "</option>"
                             );
                             $("#destination").append(
                                 '<option value="' +
-                                    city.city_id +
+                                    cities.city_id +
                                     '">' +
-                                    city.city_name +
+                                    cities.city_name +
                                     "</option>"
                             );
-                        });
-                    } else {
-                        $("#origin").append(
-                            '<option value="' +
-                                cities.city_id +
-                                '">' +
-                                cities.city_name +
-                                "</option>"
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error:", xhr, status, error);
+                        alert(
+                            "Gagal memuat daftar kota. Silakan coba lagi nanti."
                         );
-                        $("#destination").append(
-                            '<option value="' +
-                                cities.city_id +
-                                '">' +
-                                cities.city_name +
-                                "</option>"
+                    },
+                    complete: function () {
+                        // Menyembunyikan animasi loading setelah request selesai
+                        $("#LoadingAnimation").addClass("d-none");
+                        $("#LoadingAnimation").removeClass(
+                            "d-flex justify-content-center align-items-center"
                         );
-                    }
+                    },
                 });
 
                 // Submit form
                 $("#shippingForm").submit(function (event) {
                     event.preventDefault();
 
-                    // Disable submit button and show loading spinner
+                    //Menonaktifkan submit btn dan mengaktifkan spinner
                     $("#submitBtn").prop("disabled", true);
                     $("#submitBtnSpinner").removeClass("d-none");
                     $("#submitBtnText").text("Loading...");
@@ -152,17 +184,11 @@
                         courier: $("#courier").val(),
                     };
 
-                    // Logging formData to console
-                    console.log("Form Data:", formData);
-
                     $.post("/calculate-shipping", formData, function (data) {
-                        // Logging data to console
-                        console.log("API Response:", data);
-
                         var results =
-                            "<h3 class='text-center'>Total Ongkir</h3>";
+                            "<h3 class='text-center font-weight-bold mt-5'>Total Ongkir</h3>";
                         results +=
-                            '<table class="table table-striped mt-4"><thead><tr><th>Courier</th><th>Service</th><th>Cost</th><th>ETD (Days)</th></tr></thead><tbody>';
+                            '<table class="table table-striped mt-4"><thead><tr><th>Kurir</th><th>Servis</th><th>Biaya</th><th>Estimasi (Hari)</th></tr></thead><tbody>';
 
                         data.rajaongkir.results.forEach(function (service) {
                             service.costs.forEach(function (cost) {
@@ -179,7 +205,7 @@
                         results += "</tbody></table>";
                         $("#shippingCost").html(results);
 
-                        // Menambahkan animasi loading pada submit button
+                        // Menghilangkan animasi loading pada submit btn
                         $("#submitBtn").prop("disabled", false);
                         $("#submitBtnSpinner").addClass("d-none");
                         $("#submitBtnText").text("Calculate Shipping Cost");
@@ -190,7 +216,7 @@
                             "Failed to calculate shipping cost. Please try again later."
                         );
 
-                        // Menambahkan animasi loading pada submit button
+                        // Menghilangkan animasi loading pada submit btn
                         $("#submitBtn").prop("disabled", false);
                         $("#submitBtnSpinner").addClass("d-none");
                         $("#submitBtnText").text("Calculate Shipping Cost");
