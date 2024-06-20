@@ -13,12 +13,12 @@
     </head>
     <body class="bg-dark">
         <div class="loading fixed-top bg-white" id="LoadingAnimation">
+            <h2 class="mr-4 my-auto text-dark font-weight-normal">
+                Please wait
+            </h2>
             <div class="spinner-border text-dark" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
-            <h2 class="ml-4 my-auto text-dark font-weight-normal">
-                Please wait
-            </h2>
         </div>
 
         <div class="container border border-light rounded shadow p-5 bg-white">

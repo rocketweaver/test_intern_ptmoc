@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 class RajaOngkirController extends Controller
 {
@@ -11,106 +13,66 @@ class RajaOngkirController extends Controller
 
     public function getProvinces()
     {
-        $curl = curl_init();
+        $client = new Client();
 
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $this->baseURL . "province",
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                "key: {$this->API_KEY}"
-            ],
-        ]);
+        try {
+            $response = $client->get($this->baseURL . 'province', [
+                'headers' => [
+                    'key' => $this->API_KEY,
+                ],
+            ]);
 
-        $response = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $data = json_decode($response->getBody(), true);
 
-        if ($response === false) {
-            $error = curl_error($curl);
-            curl_close($curl);
-            return response()->json(['error' => $error], 500);
+            return response()->json($data);
+        } catch (RequestException $e) {
+            return response()->json(['error' => 'Failed to fetch data from RajaOngkir API.', 'message' => $e->getMessage()], 500);
         }
-
-        curl_close($curl);
-
-        $data = json_decode($response, true);
-
-        if ($httpCode >= 400) {
-            return response()->json(['error' => 'Failed to fetch data from RajaOngkir API.'], $httpCode);
-        }
-
-        return response()->json($data);
     }
 
     public function getCities(Request $request)
     {
         $provinceId = $request->input('province_id');
-        $curl = curl_init();
+        $client = new Client();
 
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $this->baseURL . "city?province={$provinceId}",
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [
-                "key: {$this->API_KEY}"
-            ],
-        ]);
+        try {
+            $response = $client->get($this->baseURL . "city?province={$provinceId}", [
+                'headers' => [
+                    'key' => $this->API_KEY,
+                ],
+            ]);
 
-        $response = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $data = json_decode($response->getBody(), true);
 
-        if ($response === false) {
-            $error = curl_error($curl);
-            curl_close($curl);
-            return response()->json(['error' => $error], 500);
+            return response()->json($data);
+        } catch (RequestException $e) {
+            return response()->json(['error' => 'Failed to fetch data from RajaOngkir API.', 'message' => $e->getMessage()], 500);
         }
-
-        curl_close($curl);
-
-        $data = json_decode($response, true);
-
-        if ($httpCode >= 400) {
-            return response()->json(['error' => 'Failed to fetch data from RajaOngkir API.'], $httpCode);
-        }
-
-        return response()->json($data);
     }
 
     public function calculateShipping(Request $request)
     {
-        $curl = curl_init();
+        $client = new Client();
 
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $this->baseURL . "cost",
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => http_build_query([
-                'origin' => $request->input('origin'),
-                'destination' => $request->input('destination'),
-                'weight' => $request->input('weight'),
-                'courier' => $request->input('courier')
-            ]),
-            CURLOPT_HTTPHEADER => [
-                "content-type: application/x-www-form-urlencoded",
-                "key: {$this->API_KEY}"
-            ],
-        ]);
+        try {
+            $response = $client->post($this->baseURL . 'cost', [
+                'headers' => [
+                    'content-type' => 'application/x-www-form-urlencoded',
+                    'key' => $this->API_KEY,
+                ],
+                'form_params' => [
+                    'origin' => $request->input('origin'),
+                    'destination' => $request->input('destination'),
+                    'weight' => $request->input('weight'),
+                    'courier' => $request->input('courier'),
+                ],
+            ]);
 
-        $response = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $data = json_decode($response->getBody(), true);
 
-        if ($response === false) {
-            $error = curl_error($curl);
-            curl_close($curl);
-            return response()->json(['error' => $error], 500);
+            return response()->json($data);
+        } catch (RequestException $e) {
+            return response()->json(['error' => 'Failed to calculate shipping cost using RajaOngkir API.', 'message' => $e->getMessage()], 500);
         }
-
-        curl_close($curl);
-
-        $data = json_decode($response, true);
-
-        if ($httpCode >= 400) {
-            return response()->json(['error' => 'Failed to calculate shipping cost using RajaOngkir API.'], $httpCode);
-        }
-
-        return response()->json($data);
     }
 }
