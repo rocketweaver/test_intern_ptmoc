@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RajaOngkirController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +17,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-
+Route::get('/provinces', [RajaOngkirController::class, 'getProvinces']);
 Route::get('/cities', [RajaOngkirController::class, 'getCities']);
 Route::post('/calculate-shipping', [RajaOngkirController::class, 'calculateShipping']);
